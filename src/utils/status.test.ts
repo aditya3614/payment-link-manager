@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { filterLinksByStatus, getEffectiveStatus, STATUS_FILTERS } from './status'
+import { countByStatus, filterLinksByStatus, getEffectiveStatus, getNextExpiryTime, STATUS_FILTERS } from './status'
 import type { PaymentLink } from './types'
 
 const NOW = new Date('2026-11-26T10:00:00.000Z')
@@ -115,5 +115,39 @@ describe('filterLinksByStatus', () => {
   it('returns an empty array when nothing matches', () => {
     expect(filterLinksByStatus([active], 'Paid', NOW)).toEqual([])
     expect(filterLinksByStatus([], 'All', NOW)).toEqual([])
+  })
+})
+
+describe('countByStatus', () => {
+  it('counts by derived status, with All as the total', () => {
+    const links = [
+      makeLink(),
+      makeLink({ expiresAt: PAST }),
+      makeLink({ status: 'Paid', expiresAt: PAST }),
+      makeLink({ expiresAt: FUTURE }),
+    ]
+    expect(countByStatus(links, NOW)).toEqual({ All: 4, Active: 2, Paid: 1, Expired: 1 })
+  })
+
+  it('returns zeros for an empty list', () => {
+    expect(countByStatus([], NOW)).toEqual({ All: 0, Active: 0, Paid: 0, Expired: 0 })
+  })
+})
+
+describe('getNextExpiryTime', () => {
+  it('returns the earliest future expiry among unpaid links', () => {
+    const links = [
+      makeLink({ expiresAt: '2026-11-27T00:00:00.000Z' }),
+      makeLink({ expiresAt: '2026-11-26T12:00:00.000Z' }),
+      makeLink({ status: 'Paid', expiresAt: '2026-11-26T10:30:00.000Z' }), // paid: never flips
+      makeLink({ expiresAt: PAST }), // already expired
+      makeLink(), // no expiry
+    ]
+    expect(getNextExpiryTime(links, NOW)).toBe(Date.parse('2026-11-26T12:00:00.000Z'))
+  })
+
+  it('returns null when nothing will ever flip', () => {
+    expect(getNextExpiryTime([makeLink(), makeLink({ expiresAt: PAST }), makeLink({ status: 'Paid', expiresAt: FUTURE })], NOW)).toBeNull()
+    expect(getNextExpiryTime([makeLink({ expiresAt: 'garbage' })], NOW)).toBeNull()
   })
 })

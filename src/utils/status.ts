@@ -24,3 +24,30 @@ export function filterLinksByStatus<T extends Pick<PaymentLink, 'status' | 'expi
   if (filter === 'All') return [...links]
   return links.filter((link) => getEffectiveStatus(link, now) === filter)
 }
+
+export function countByStatus(
+  links: readonly Pick<PaymentLink, 'status' | 'expiresAt'>[],
+  now: Date = new Date(),
+): Record<StatusFilter, number> {
+  const counts: Record<StatusFilter, number> = { All: links.length, Active: 0, Paid: 0, Expired: 0 }
+  for (const link of links) counts[getEffectiveStatus(link, now)] += 1
+  return counts
+}
+
+/**
+ * Earliest future moment at which some link's effective status will flip to
+ * Expired, or null if none will. Lets the UI re-render exactly when needed.
+ */
+export function getNextExpiryTime(
+  links: readonly Pick<PaymentLink, 'status' | 'expiresAt'>[],
+  now: Date = new Date(),
+): number | null {
+  let next: number | null = null
+  for (const link of links) {
+    if (link.status === 'Paid' || !link.expiresAt) continue
+    const at = Date.parse(link.expiresAt)
+    if (Number.isNaN(at) || at <= now.getTime()) continue
+    if (next === null || at < next) next = at
+  }
+  return next
+}
