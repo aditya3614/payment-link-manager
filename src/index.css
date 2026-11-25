@@ -3,7 +3,8 @@
   --surface: #ffffff;
   --surface-muted: #f8f9fc;
   --border: #dde2ec;
-  --border-strong: #b7c0d1;
+  /* >= 3:1 against surface/bg so input and button edges pass WCAG 1.4.11. */
+  --border-strong: #848ea2;
   --text: #121826;
   --text-muted: #4f5a6e;
   --primary: #2952cc;
@@ -40,7 +41,7 @@
     --surface: #161c28;
     --surface-muted: #1c2331;
     --border: #2a3345;
-    --border-strong: #3d4860;
+    --border-strong: #66738e;
     --text: #e8ecf4;
     --text-muted: #a3adc2;
     --primary: #7c9cff;
@@ -218,8 +219,9 @@ input {
 }
 
 .field input::placeholder {
+  /* No opacity: a faded placeholder dropped below 4.5:1. */
   color: var(--text-muted);
-  opacity: 0.7;
+  opacity: 1;
 }
 
 .field input[aria-invalid='true'],
@@ -376,7 +378,7 @@ input {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-height: 40px;
+  min-height: 44px;
   padding: 6px 14px;
   border: 1px solid var(--border-strong);
   border-radius: 999px;
@@ -408,8 +410,9 @@ input {
 }
 
 .status-filter__button[aria-pressed='true'] .status-filter__count {
-  background: rgb(255 255 255 / 22%);
-  color: inherit;
+  /* Inverted chip: a translucent white chip on --primary was only 4.1:1. */
+  background: var(--primary-contrast);
+  color: var(--primary);
 }
 
 .link-list {

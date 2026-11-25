@@ -112,6 +112,8 @@ describe('Empty states', () => {
 
     await user.click(screen.getByRole('button', { name: 'Show all links' }))
     expect(filterButton('All')).toHaveAttribute('aria-pressed', 'true')
+    // The button that was clicked is gone; focus must land somewhere useful, not <body>.
+    expect(filterButton('All')).toHaveFocus()
     expect(cardFor('Only active')).toBeInTheDocument()
   })
 })
@@ -122,6 +124,16 @@ describe('Create payment link form', () => {
     for (const label of ['Amount (₹)', 'Description', 'Email', 'Phone', /Expiry/]) {
       expect(field(label)).toBeInstanceOf(HTMLInputElement)
     }
+  })
+
+  it('announces the description length in words and does not autofill customer contact', async () => {
+    const user = userEvent.setup()
+    render(<App initialLinks={[]} />)
+
+    await user.type(field('Description'), 'Tuition')
+    expect(field('Description')).toHaveAccessibleDescription('7 of 100 characters used')
+    expect(field('Email')).toHaveAttribute('autocomplete', 'off')
+    expect(field('Phone')).toHaveAttribute('autocomplete', 'off')
   })
 
   it('shows inline, accessible errors on an empty submit and focuses the first invalid field', async () => {

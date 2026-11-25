@@ -103,6 +103,12 @@ export function PaymentLinkForm({ onCreate }: PaymentLinkFormProps) {
 
   return (
     <form className="link-form" noValidate onSubmit={handleSubmit} aria-labelledby="create-heading">
+      {/* Top of the form, next to the Amount field that receives focus after a create: on a phone, a
+          message below the submit button would be scrolled out of view by that focus move. */}
+      <p className="form-success" role="status">
+        {successMessage}
+      </p>
+
       {submitted && visibleErrorCount > 0 && (
         <p className="form-alert" role="alert">
           Fix {visibleErrorCount === 1 ? 'the highlighted field' : `the ${visibleErrorCount} highlighted fields`} to
@@ -140,7 +146,12 @@ export function PaymentLinkForm({ onCreate }: PaymentLinkFormProps) {
             id="description-count"
             className={`char-count${descriptionLength > MAX_DESCRIPTION_LENGTH ? ' is-over' : ''}`}
           >
-            {descriptionLength}/{MAX_DESCRIPTION_LENGTH}
+            <span aria-hidden="true">
+              {descriptionLength}/{MAX_DESCRIPTION_LENGTH}
+            </span>
+            <span className="visually-hidden">
+              {descriptionLength} of {MAX_DESCRIPTION_LENGTH} characters used
+            </span>
           </span>
         </div>
         <input
@@ -155,6 +166,7 @@ export function PaymentLinkForm({ onCreate }: PaymentLinkFormProps) {
         <FieldError id={errorId('description')} message={errors.description} />
       </div>
 
+      {/* autoComplete is off: these are the customer's details, and autofill would insert the merchant's own. */}
       <fieldset className="field-group" aria-describedby={describedBy('contact-hint')}>
         <legend>Customer contact</legend>
         <p id="contact-hint" className="field-hint">
@@ -167,7 +179,7 @@ export function PaymentLinkForm({ onCreate }: PaymentLinkFormProps) {
             {...register('email')}
             type="email"
             inputMode="email"
-            autoComplete="email"
+            autoComplete="off"
             placeholder="customer@example.com"
             aria-invalid={errors.email || contactInvalid ? true : undefined}
             aria-describedby={describedBy(
@@ -184,7 +196,7 @@ export function PaymentLinkForm({ onCreate }: PaymentLinkFormProps) {
             {...register('phone')}
             type="tel"
             inputMode="tel"
-            autoComplete="tel"
+            autoComplete="off"
             placeholder="+91 98765 43210"
             aria-invalid={errors.phone || contactInvalid ? true : undefined}
             aria-describedby={describedBy(
@@ -223,10 +235,6 @@ export function PaymentLinkForm({ onCreate }: PaymentLinkFormProps) {
       <button type="submit" className="button button--primary">
         Create payment link
       </button>
-
-      <p className="form-success" role="status">
-        {successMessage}
-      </p>
     </form>
   )
 }

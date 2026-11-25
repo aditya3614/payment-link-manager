@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { PaymentLinkForm } from './components/PaymentLinkForm'
 import { PaymentLinkList } from './components/PaymentLinkList'
 import { StatusFilter } from './components/StatusFilter'
@@ -17,6 +17,7 @@ interface AppProps {
 export default function App({ initialLinks }: AppProps) {
   const { links, addLink } = usePaymentLinks(() => initialLinks ?? createSeedLinks())
   const [filter, setFilter] = useState<StatusFilterValue>('All')
+  const allFilterRef = useRef<HTMLButtonElement>(null)
 
   // Status is derived from `now`, which re-renders exactly when the next link expires.
   const now = useNow(getNextExpiryTime(links))
@@ -33,6 +34,12 @@ export default function App({ initialLinks }: AppProps) {
     },
     [addLink],
   )
+
+  const handleShowAll = useCallback(() => {
+    setFilter('All')
+    // The "Show all links" button unmounts once the list fills; don't drop keyboard focus to <body>.
+    allFilterRef.current?.focus()
+  }, [])
 
   return (
     <div className="app">
@@ -52,7 +59,7 @@ export default function App({ initialLinks }: AppProps) {
         <section className="panel panel--list" aria-labelledby="links-heading">
           <div className="list-header">
             <h2 id="links-heading">Your payment links</h2>
-            <StatusFilter value={filter} counts={counts} onChange={setFilter} />
+            <StatusFilter value={filter} counts={counts} onChange={setFilter} allButtonRef={allFilterRef} />
             <p className="list-summary" aria-live="polite">
               {filter === 'All'
                 ? `Showing all ${links.length} ${links.length === 1 ? 'link' : 'links'}`
@@ -64,7 +71,7 @@ export default function App({ initialLinks }: AppProps) {
             totalCount={links.length}
             filter={filter}
             now={now}
-            onShowAll={() => setFilter('All')}
+            onShowAll={handleShowAll}
           />
         </section>
       </main>
